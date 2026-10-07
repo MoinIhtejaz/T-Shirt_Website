@@ -73,3 +73,11 @@ The project was built by separate agents, one per layer. Each layer only talks t
 | `docs/` | Requirements, backlog, threat model, security review and the build report |
 
 Product photos are stored in `uploads/` and the database in `data/`. Both are ignored by git, so back them up separately.
+
+## Deploying to Vercel
+
+Vercel builds this project with `npm run build:vercel` (set in `vercel.json`). That command builds the site and bundles the API into one serverless function. No environment variables are needed.
+
+Vercel keeps no files between requests, so the deployed site runs read-only. Each server instance loads the shirts from `catalogue/` when it starts. Logging in and editing are switched off there, and the admin page says so. To change the range online, edit `catalogue/products.json` (and add photos to `catalogue/images/`), then push to GitHub. Vercel redeploys on its own.
+
+To manage shirts through the admin panel in production, run the app on a host with a persistent disk (Render, Railway or Fly.io, using `npm run build` then `npm start`), or move the database and photos to hosted storage.

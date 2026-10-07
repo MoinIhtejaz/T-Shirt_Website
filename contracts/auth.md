@@ -1,4 +1,4 @@
-# Auth contract (version 2)
+# Auth contract (version 4)
 
 ## Model
 

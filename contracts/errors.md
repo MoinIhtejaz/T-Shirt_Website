@@ -1,4 +1,4 @@
-# Error contract (version 2)
+# Error contract (version 4)
 
 Every non-2xx JSON response from `/api/**` uses this envelope:
 
@@ -24,5 +24,6 @@ Every non-2xx JSON response from `/api/**` uses this envelope:
 | `FILE_TOO_LARGE` | 413 | An uploaded image is over 5 MB |
 | `PAYLOAD_TOO_LARGE` | 413 | A JSON body is over 100 kB (handled by the glue error handler) |
 | `UNSUPPORTED_MEDIA_TYPE` | 415 | An upload that isn't JPEG, PNG or WebP by **content** (magic bytes), or a missing `image` field |
+| `READ_ONLY` | 403 | Any non-GET/HEAD/OPTIONS `/api` request while the server runs read-only (`READ_ONLY=true`, always on Vercel). Checked before CSRF, by the glue |
 | `RATE_LIMITED` | 429 | Too many login attempts. Sets a `Retry-After` header in seconds |
 | `INTERNAL` | 500 | Anything unexpected. The message is always "Something went wrong." The detail is logged on the server only |

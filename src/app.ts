@@ -5,7 +5,7 @@ import express, { type Express } from 'express';
 import cookieParser from 'cookie-parser';
 import type { DatabaseSync } from 'node:sqlite';
 import type { AppConfig } from './shared/config';
-import { apiNotFound, errorHandler } from './shared/http';
+import { apiNotFound, errorHandler, sendError } from './shared/http';
 import { openDatabase, createRepositories } from './db/index';
 import { createAuth } from './auth/index';
 import { securityHeaders, csrfGuard, rateLimiter, isAllowedAmazonUrl } from './security/index';
@@ -31,6 +31,12 @@ export function createApp(config: AppConfig): AppHandle {
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());
 
+  if (config.readOnly) {
+    app.use('/api', (req, res, next) => {
+      if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return next();
+      sendError(res, 403, 'READ_ONLY', 'This copy of the site is read-only. Shirts are managed in the catalogue folder and published by redeploying.');
+    });
+  }
   app.use('/api', csrfGuard());
   app.post('/api/auth/login', rateLimiter({ windowMs: 15 * 60 * 1000, max: 10 }));
   app.use('/api/auth', auth.router);

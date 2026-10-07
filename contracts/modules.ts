@@ -1,4 +1,4 @@
-// Contract version 2. In-process module boundaries between layers.
+// Contract version 4. In-process module boundaries between layers.
 // READ ONLY for subagents. Each layer's index.ts must export exactly the
 // functions named here, with these signatures. The composition root
 // (src/app.ts, orchestrator-owned) wires them together.

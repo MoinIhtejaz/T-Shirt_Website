@@ -8,3 +8,4 @@ uploads/
 *.db-shm
 .DS_Store
 backups/
+.vercel/

@@ -1,4 +1,4 @@
-// Contract version 2. Shared types for the HTTP API.
+// Contract version 4. Shared types for the HTTP API.
 // READ ONLY for subagents. File a change request to alter anything here.
 // Every JSON body crossing the API boundary uses exactly these shapes.
 
@@ -125,6 +125,7 @@ export type ErrorCode =
   | 'PAYLOAD_TOO_LARGE'
   | 'UNSUPPORTED_MEDIA_TYPE'
   | 'RATE_LIMITED'
+  | 'READ_ONLY'
   | 'INTERNAL';
 
 export interface FieldError {

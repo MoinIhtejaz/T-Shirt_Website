@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { DatabaseSync } from 'node:sqlite';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Repositories } from '../../contracts/modules';
 import { SIZES } from '../../contracts/types';
 import { createRepositories, openDatabase } from '../../src/db/index';
@@ -316,6 +316,42 @@ describe('seedDatabase with fixture catalogues (DB-005)', () => {
     expect(second.catalogueSeeded).toBe(false);
     expect(repos.products.list({})).toHaveLength(1);
     expect(fs.readdirSync(uploadDir)).toHaveLength(1);
+  });
+});
+
+describe('seedDatabase without an admin (DB-006)', () => {
+  it('admin null: no admins row, hashPassword never called, catalogue fully seeded', async () => {
+    const hash = vi.fn(fakeHash);
+    const result = await seedDatabase(db, uploadDir, null, hash);
+    expect(hash).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ adminId: null, catalogueSeeded: true, categoriesSeeded: 4, productsCreated: 7 });
+    expect(db.prepare('SELECT COUNT(*) AS n FROM admins').get()).toEqual({ n: 0 });
+    expect(repos.products.list({ status: 'published' })).toHaveLength(7);
+    expect(fs.readdirSync(uploadDir)).toHaveLength(7);
+  });
+
+  it('a second call with admin null is a no-op', async () => {
+    await seedDatabase(db, uploadDir, null, fakeHash);
+    const files = fs.readdirSync(uploadDir).sort();
+    const second = await seedDatabase(db, uploadDir, null, fakeHash);
+    expect(second).toMatchObject({ adminId: null, catalogueSeeded: false, productsCreated: 0, imagesWritten: [] });
+    expect(db.prepare('SELECT COUNT(*) AS n FROM admins').get()).toEqual({ n: 0 });
+    expect(repos.products.list({})).toHaveLength(7);
+    expect(fs.readdirSync(uploadDir).sort()).toEqual(files);
+  });
+
+  it('admin null with an invalid catalogue still throws and writes nothing', async () => {
+    const dir = writeCatalogue([fixtureProduct({ amazonUrl: 'https://evil.example/' })]);
+    await expect(seedDatabase(db, uploadDir, null, fakeHash, { catalogueDir: dir })).rejects.toThrow(/amazonUrl/);
+    expectNothingWritten();
+  });
+
+  it('admin null: a failure midway rolls back and removes copied files', async () => {
+    const dir = writeCatalogue([fixtureProduct({ slug: 'first-tee' }), fixtureProduct({ slug: 'second-tee' })]);
+    db.exec(`CREATE TRIGGER fail_second BEFORE INSERT ON products WHEN NEW.slug = 'second-tee'
+             BEGIN SELECT RAISE(ABORT, 'simulated failure'); END`);
+    await expect(seedDatabase(db, uploadDir, null, fakeHash, { catalogueDir: dir })).rejects.toThrow(/simulated/);
+    expectNothingWritten();
   });
 });
 

@@ -5,6 +5,9 @@
 // The whole catalogue (JSON and image bytes) is validated before anything is
 // written. The writes then run in one transaction; on failure the transaction
 // is rolled back and any image files already copied are removed.
+//
+// seedDatabase also accepts admin = null (read-only deployments with no admin
+// panel): the catalogue is seeded the same way and no admin row is touched.
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -226,7 +229,8 @@ export interface SeedOptions {
 }
 
 export interface SeedResult {
-  adminId: number;
+  /** null when seeded without an admin (read-only deployments). */
+  adminId: number | null;
   catalogueSeeded: boolean;
   /** Catalogue categories linked, whether created now or reused by slug. */
   categoriesSeeded: number;
@@ -243,17 +247,18 @@ function hasProducts(db: DatabaseSync): boolean {
 export async function seedDatabase(
   db: DatabaseSync,
   uploadDir: string,
-  admin: { email: string; password: string },
+  /** null skips the password hash and admin upsert entirely (e.g. a read-only showcase deployment). */
+  admin: { email: string; password: string } | null,
   hashPassword: (plain: string) => Promise<string>,
   options: SeedOptions = {},
 ): Promise<SeedResult> {
   // Validate before any write, so a bad catalogue leaves the database untouched.
   const catalogue = hasProducts(db) ? null : loadCatalogue(options.catalogueDir);
-  const passwordHash = await hashPassword(admin.password);
+  const passwordHash = admin ? await hashPassword(admin.password) : null;
 
   const repos = createRepositories(db);
   const result: SeedResult = {
-    adminId: 0,
+    adminId: null,
     catalogueSeeded: false,
     categoriesSeeded: 0,
     categoriesCreated: 0,
@@ -263,7 +268,7 @@ export async function seedDatabase(
 
   db.exec('BEGIN IMMEDIATE');
   try {
-    result.adminId = repos.admins.upsert(admin.email, passwordHash).id;
+    if (admin && passwordHash !== null) result.adminId = repos.admins.upsert(admin.email, passwordHash).id;
 
     // Re-check under the write lock in case another process seeded first.
     if (catalogue && !hasProducts(db)) {

@@ -1,4 +1,4 @@
--- Contract version 2. Database schema (SQLite via node:sqlite).
+-- Contract version 4. Database schema (SQLite via node:sqlite).
 -- READ ONLY for subagents. The database layer implements this exactly as
 -- migration 1. PRAGMA foreign_keys = ON and journal_mode = WAL are set
 -- on every connection opened by openDatabase().

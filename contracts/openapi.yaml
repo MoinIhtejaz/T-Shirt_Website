@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Saltline Sydney API
-  version: "2"   # contract version
+  version: "4"   # contract version
   description: |
     READ ONLY for subagents. Every route the server exposes is listed here.
     All bodies are JSON except the image upload (multipart/form-data).
