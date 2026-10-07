@@ -1,6 +1,8 @@
 // `npm run seed`: upserts the admin account and, only when the products table
 // is empty, loads the real catalogue from catalogue/products.json, copying its
-// images from catalogue/images/ into UPLOAD_DIR under random names.
+// images from catalogue/images/ into UPLOAD_DIR under deterministic names
+// (see seedImageFilename), so every instance seeded from the same catalogue
+// serves the same image URLs.
 //
 // The whole catalogue (JSON and image bytes) is validated before anything is
 // written. The writes then run in one transaction; on failure the transaction
@@ -34,6 +36,8 @@ export interface CatalogueImage {
   alt: string;
   ext: ImageExt;
   bytes: Buffer;
+  /** Name in uploadDir, from seedImageFilename. */
+  filename: string;
 }
 
 export interface CatalogueProduct {
@@ -74,6 +78,22 @@ function detectImageType(buf: Buffer): ImageExt | null {
     return 'webp';
   }
   return null;
+}
+
+/**
+ * First 32 hex chars of sha256(productSlug + "\0" + imageFile + "\0" + fileBytes), plus the
+ * extension. Stable across runs and instances, and unguessable without the file itself.
+ */
+export function seedImageFilename(productSlug: string, imageFile: string, bytes: Buffer, ext: ImageExt): string {
+  const digest = crypto
+    .createHash('sha256')
+    .update(productSlug, 'utf8')
+    .update('\0')
+    .update(imageFile, 'utf8')
+    .update('\0')
+    .update(bytes)
+    .digest('hex');
+  return `${digest.slice(0, 32)}.${ext}`;
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -118,7 +138,7 @@ function parseCategory(raw: unknown, index: number): CategoryWrite {
   return { slug: s, name: str(raw, 'name', named, 1, 60), sortOrder: int(raw, 'sortOrder', named, -1000, 1000) };
 }
 
-function readImage(raw: unknown, index: number, where: string, imagesDir: string): CatalogueImage {
+function readImage(raw: unknown, index: number, productSlug: string, where: string, imagesDir: string): CatalogueImage {
   const at = `${where} field "images[${index}]"`;
   if (!isRecord(raw)) throw new CatalogueError(`${at} must be an object`);
   const file = raw.file;
@@ -137,7 +157,7 @@ function readImage(raw: unknown, index: number, where: string, imagesDir: string
   }
   const ext = detectImageType(bytes);
   if (!ext) throw new CatalogueError(`${at}.file: images/${file} is not a JPEG, PNG or WebP image`);
-  return { file, alt, ext, bytes };
+  return { file, alt, ext, bytes, filename: seedImageFilename(productSlug, file, bytes, ext) };
 }
 
 function parseProduct(raw: unknown, index: number, categorySlugs: Set<string>, imagesDir: string): CatalogueProduct {
@@ -180,8 +200,13 @@ function parseProduct(raw: unknown, index: number, categorySlugs: Set<string>, i
   if (typeof raw.featured !== 'boolean') throw new CatalogueError(`${where} field "featured" must be true or false`);
 
   const images = arr(raw, 'images', where, MAX_IMAGES_PER_PRODUCT).map((img, i) =>
-    readImage(img, i, where, imagesDir),
+    readImage(img, i, s, where, imagesDir),
   );
+  const files = new Set<string>();
+  for (const image of images) {
+    if (files.has(image.file)) throw new CatalogueError(`${where} field "images": ${image.file} is listed twice`);
+    files.add(image.file);
+  }
 
   return { slug: s, name, categorySlug, description, priceCents, colours, sizes, amazonUrl, featured: raw.featured, images };
 }
@@ -236,8 +261,35 @@ export interface SeedResult {
   categoriesSeeded: number;
   categoriesCreated: number;
   productsCreated: number;
-  /** Absolute paths of the image files copied into uploadDir. */
+  /** Absolute paths of the files backing the seeded image rows (new, or already present with identical bytes). */
   imagesWritten: string[];
+}
+
+/**
+ * Writes the image under its deterministic name with 'wx'. An existing file with identical
+ * bytes is accepted (re-seed into an existing upload dir); different bytes are an error.
+ * Files this call creates are appended to `created`.
+ */
+function writeSeedImage(filePath: string, bytes: Buffer, productSlug: string, created: string[]): void {
+  let fd: number;
+  try {
+    fd = fs.openSync(filePath, 'wx');
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== 'EEXIST') throw err;
+    if (!fs.readFileSync(filePath).equals(bytes)) {
+      throw new Error(
+        `Seed image ${path.basename(filePath)} for product "${productSlug}" already exists in the upload dir with different contents`,
+      );
+    }
+    return;
+  }
+  // Recorded as soon as we own the file, so a failed write is still cleaned up.
+  created.push(filePath);
+  try {
+    fs.writeFileSync(fd, bytes);
+  } finally {
+    fs.closeSync(fd);
+  }
 }
 
 function hasProducts(db: DatabaseSync): boolean {
@@ -266,6 +318,7 @@ export async function seedDatabase(
     imagesWritten: [],
   };
 
+  const createdFiles: string[] = [];
   db.exec('BEGIN IMMEDIATE');
   try {
     if (admin && passwordHash !== null) result.adminId = repos.admins.upsert(admin.email, passwordHash).id;
@@ -298,11 +351,10 @@ export async function seedDatabase(
         result.productsCreated += 1;
 
         for (const image of item.images) {
-          const filename = `${crypto.randomBytes(16).toString('hex')}.${image.ext}`;
-          const filePath = path.join(uploadDir, filename);
-          fs.writeFileSync(filePath, image.bytes, { flag: 'wx' });
+          const filePath = path.join(uploadDir, image.filename);
+          writeSeedImage(filePath, image.bytes, item.slug, createdFiles);
           result.imagesWritten.push(filePath);
-          repos.images.create({ productId: product.id, filename, alt: image.alt });
+          repos.images.create({ productId: product.id, filename: image.filename, alt: image.alt });
         }
       }
       result.catalogueSeeded = true;
@@ -310,7 +362,8 @@ export async function seedDatabase(
     db.exec('COMMIT');
   } catch (err) {
     if (db.isTransaction) db.exec('ROLLBACK');
-    for (const filePath of result.imagesWritten) fs.rmSync(filePath, { force: true });
+    // Only files this run created; identical files that were already there stay.
+    for (const filePath of createdFiles) fs.rmSync(filePath, { force: true });
     throw err;
   }
   return result;
@@ -328,7 +381,7 @@ async function main(): Promise<void> {
     console.log(
       result.catalogueSeeded
         ? `Catalogue seeded: ${result.categoriesSeeded} categories (${result.categoriesCreated} new), ` +
-            `${result.productsCreated} products, ${result.imagesWritten.length} images copied to ${config.uploadDir}.`
+            `${result.productsCreated} products, ${result.imagesWritten.length} images in ${config.uploadDir}.`
         : 'Products already exist; catalogue left unchanged.',
     );
   } finally {

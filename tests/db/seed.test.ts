@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -7,7 +8,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Repositories } from '../../contracts/modules';
 import { SIZES } from '../../contracts/types';
 import { createRepositories, openDatabase } from '../../src/db/index';
-import { CatalogueError, DEFAULT_CATALOGUE_DIR, loadCatalogue, seedDatabase } from '../../src/db/seed';
+import {
+  CatalogueError,
+  DEFAULT_CATALOGUE_DIR,
+  loadCatalogue,
+  seedDatabase,
+  seedImageFilename,
+} from '../../src/db/seed';
 import { isAllowedAmazonUrl } from '../../src/security/index';
 
 const fakeHash = async (plain: string) => `fake$${plain.length}$${plain.split('').reverse().join('')}`;
@@ -120,7 +127,7 @@ describe('seedDatabase with the real catalogue (DB-005)', () => {
     );
   });
 
-  it('copies the 7 images under random names, byte for byte, keeping alt text', async () => {
+  it('copies the 7 images under sha256-derived names, byte for byte, keeping alt text', async () => {
     const result = await seedDatabase(db, uploadDir, admin, fakeHash);
     expect(result.imagesWritten).toHaveLength(7);
     expect(fs.readdirSync(uploadDir)).toHaveLength(7);
@@ -134,6 +141,11 @@ describe('seedDatabase with the real catalogue (DB-005)', () => {
         expect(img.alt).toBe(expected.images[i].alt);
         const copied = fs.readFileSync(path.join(uploadDir, img.filename));
         const original = fs.readFileSync(path.join(REAL_CATALOGUE, 'images', expected.images[i].file));
+        const digest = crypto
+          .createHash('sha256')
+          .update(Buffer.concat([Buffer.from(`${expected.slug}\0${expected.images[i].file}\0`), original]))
+          .digest('hex');
+        expect(img.filename).toBe(`${digest.slice(0, 32)}.jpg`);
         expect(copied.equals(original)).toBe(true);
       });
     }
@@ -234,6 +246,11 @@ describe('seedDatabase with fixture catalogues (DB-005)', () => {
     ['image path traversal', [fixtureProduct({ images: [{ file: '../products.json', alt: 'x' }] })], /images\[0\]"\.file/],
     ['empty alt', [fixtureProduct({ images: [{ file: 'a.jpg', alt: '' }] })], /images\[0\]"\.alt/],
     ['duplicate slug', [fixtureProduct(), fixtureProduct()], /product "fixture-tee" field "slug" is used twice/],
+    [
+      'same image listed twice',
+      [fixtureProduct({ images: [{ file: 'a.jpg', alt: 'x' }, { file: 'a.jpg', alt: 'y' }] })],
+      /product "fixture-tee" field "images": a\.jpg is listed twice/,
+    ],
   ];
 
   it.each(invalidCases)('%s: throws naming the product and field, writes nothing', async (_label, products, message) => {
@@ -352,6 +369,104 @@ describe('seedDatabase without an admin (DB-006)', () => {
              BEGIN SELECT RAISE(ABORT, 'simulated failure'); END`);
     await expect(seedDatabase(db, uploadDir, null, fakeHash, { catalogueDir: dir })).rejects.toThrow(/simulated/);
     expectNothingWritten();
+  });
+});
+
+describe('deterministic seed image names (DB-007)', () => {
+  const NAME = /^[0-9a-f]{32}\.(jpg|png|webp)$/;
+
+  function urlsBySlug(r: Repositories): Record<string, string[]> {
+    return Object.fromEntries(r.products.list({}).map((p) => [p.slug, p.images.map((i) => i.url)]));
+  }
+
+  it('two seeds into separate databases and upload dirs give identical names and URLs', async () => {
+    const otherDb = openDatabase(':memory:');
+    const otherUploads = path.join(tmp, 'uploads-b');
+    try {
+      await seedDatabase(db, uploadDir, null, fakeHash);
+      await seedDatabase(otherDb, otherUploads, null, fakeHash);
+
+      const a = fs.readdirSync(uploadDir).sort();
+      expect(a).toHaveLength(7);
+      for (const name of a) expect(name).toMatch(NAME);
+      expect(fs.readdirSync(otherUploads).sort()).toEqual(a);
+
+      const urlsA = urlsBySlug(repos);
+      expect(Object.keys(urlsA)).toHaveLength(7);
+      expect(urlsBySlug(createRepositories(otherDb))).toEqual(urlsA);
+    } finally {
+      otherDb.close();
+    }
+  });
+
+  it('fixture names follow the extension from magic bytes and differ per product', async () => {
+    const dir = writeCatalogue(
+      [
+        fixtureProduct({ slug: 'one-tee', images: [{ file: 'a.jpg', alt: 'a' }, { file: 'b.jpg', alt: 'b' }] }),
+        fixtureProduct({ slug: 'two-tee', images: [{ file: 'a.jpg', alt: 'a' }] }),
+      ],
+      { 'a.jpg': JPEG, 'b.jpg': PNG },
+    );
+    await seedDatabase(db, uploadDir, null, fakeHash, { catalogueDir: dir });
+    const one = repos.images.listForProduct(repos.products.getBySlug('one-tee')!.id).map((i) => i.filename);
+    const two = repos.images.listForProduct(repos.products.getBySlug('two-tee')!.id).map((i) => i.filename);
+    expect(one).toEqual([seedImageFilename('one-tee', 'a.jpg', JPEG, 'jpg'), seedImageFilename('one-tee', 'b.jpg', PNG, 'png')]);
+    expect(two).toEqual([seedImageFilename('two-tee', 'a.jpg', JPEG, 'jpg')]);
+    expect(one[1]).toMatch(/\.png$/);
+    expect(two[0]).not.toBe(one[0]);
+    expect(fs.readdirSync(uploadDir)).toHaveLength(3);
+  });
+
+  it('re-seeding a fresh database into an upload dir that already has identical files succeeds', async () => {
+    await seedDatabase(db, uploadDir, null, fakeHash);
+    const before = fs.readdirSync(uploadDir).sort();
+
+    const freshDb = openDatabase(':memory:');
+    try {
+      const result = await seedDatabase(freshDb, uploadDir, null, fakeHash);
+      expect(result).toMatchObject({ catalogueSeeded: true, productsCreated: 7 });
+      expect(result.imagesWritten).toHaveLength(7);
+      expect(fs.readdirSync(uploadDir).sort()).toEqual(before);
+      expect(urlsBySlug(createRepositories(freshDb))).toEqual(urlsBySlug(repos));
+    } finally {
+      freshDb.close();
+    }
+  });
+
+  it('an existing file with different bytes fails, is left untouched, and nothing is written', async () => {
+    const dir = writeCatalogue([fixtureProduct({ slug: 'good-tee' }), fixtureProduct()]);
+    const clash = seedImageFilename('fixture-tee', 'a.jpg', JPEG, 'jpg');
+    fs.mkdirSync(uploadDir, { recursive: true });
+    fs.writeFileSync(path.join(uploadDir, clash), 'not the same bytes');
+
+    await expect(seedDatabase(db, uploadDir, admin, fakeHash, { catalogueDir: dir })).rejects.toThrow(
+      /already exists in the upload dir with different contents/,
+    );
+    expect(fs.readdirSync(uploadDir)).toEqual([clash]);
+    expect(fs.readFileSync(path.join(uploadDir, clash), 'utf8')).toBe('not the same bytes');
+    expect(repos.admins.getByEmail(admin.email)).toBeNull();
+    expect(repos.products.list({})).toEqual([]);
+    expect(repos.categories.list()).toEqual([]);
+  });
+
+  it('a failure midway removes only files this run created, not identical pre-existing ones', async () => {
+    const dir = writeCatalogue(
+      [
+        fixtureProduct({ slug: 'first-tee' }),
+        fixtureProduct({ slug: 'second-tee' }),
+        fixtureProduct({ slug: 'third-tee' }),
+      ],
+      { 'a.jpg': JPEG },
+    );
+    const preExisting = seedImageFilename('first-tee', 'a.jpg', JPEG, 'jpg');
+    fs.mkdirSync(uploadDir, { recursive: true });
+    fs.writeFileSync(path.join(uploadDir, preExisting), JPEG);
+    db.exec(`CREATE TRIGGER fail_third BEFORE INSERT ON products WHEN NEW.slug = 'third-tee'
+             BEGIN SELECT RAISE(ABORT, 'simulated failure'); END`);
+
+    await expect(seedDatabase(db, uploadDir, null, fakeHash, { catalogueDir: dir })).rejects.toThrow(/simulated/);
+    expect(fs.readdirSync(uploadDir)).toEqual([preExisting]);
+    expect(repos.products.list({})).toEqual([]);
   });
 });
 
