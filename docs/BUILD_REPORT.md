@@ -106,3 +106,15 @@ These details weren't in the photos, so I set placeholders. Please check them:
 Two photos (Tasmania and Sydney Harbour Sunset) are much smaller than the others and look slightly soft on large screens. Higher-resolution photos would fix that. A critical advisory published for `shell-quote`, used only by the dev-server runner, was resolved by pinning a patched version. The dependency audit is clean again.
 
 Gates this round: 436 tests passing, typecheck clean, build passing, 0 known vulnerabilities, and the site checked in a browser on your real data.
+
+## Round 5: Vercel deployment (7 October 2026)
+
+The live site at https://t-shirt-website-pied.vercel.app returned 404 on every page. Environment variables weren't the cause: the project has none, and needs none. Vercel's Vite preset published the `dist/` folder, but this site builds into `dist/ui/`, and the API needs a server that the preset never created.
+
+The project now builds with `npm run build:vercel`, set in `vercel.json`. The site is published as static files with the same security headers the Express server sends. The API is bundled into one serverless function. Each function instance loads the catalogue into a temporary database when it starts.
+
+Vercel keeps no files between requests, so the deployed site is read-only. Logging in and editing return a clear "read-only" message. Catalogue photos are named from a hash of their contents, so every function instance serves the same addresses. Random names caused broken photos on the first preview.
+
+Checked on the live URL: the home page, all 7 products and photos, category filters, links straight to a shirt page, and read-only refusal of writes. Tests: 450 passing.
+
+To edit shirts through the admin panel in production, either host on a server with a disk (Render, Railway or Fly.io) or move the database and photos to hosted storage.
