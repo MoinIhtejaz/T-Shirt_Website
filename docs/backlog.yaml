@@ -1,0 +1,232 @@
+# Phase 2 backlog. Contract version 1.
+# Points: 1, 2, 3, 5, 8 (an 8 must be split). Each story has exactly one owning layer.
+
+rounds:
+  1: [DB-001, DB-002, DB-003, DB-004, AUTH-001, AUTH-002, AUTH-003, SEC-001, SEC-002, SEC-003, FE-001, FE-002, FE-003, FE-004, FE-005, FE-006]
+  2: [BE-001, BE-002, BE-003, BE-004]          # needs the real repositories from round 1
+  3: [SEC-004]                                  # review of the assembled system
+
+stories:
+  # ---------------- database (14 pts) ----------------
+  - id: DB-001
+    title: openDatabase with pragmas and a forward-only migration runner applying schema.sql as migration 1
+    layer: database
+    points: 3
+    depends_on: []
+    contracts_touched: [contracts/schema.sql, contracts/modules.ts#DbModule]
+    acceptance:
+      - openDatabase(':memory:') yields every table and index in schema.sql
+      - Calling openDatabase twice on the same file applies migration 1 once (schema_migrations has one row)
+      - PRAGMA foreign_keys returns 1
+  - id: DB-002
+    title: Category and product repositories
+    layer: database
+    points: 5
+    depends_on: [DB-001]
+    contracts_touched: [contracts/modules.ts#CategoryRepo, contracts/modules.ts#ProductRepo, contracts/types.ts#AdminProduct]
+    acceptance:
+      - Product rows map to AdminProduct, with category ref, primaryImage, images ordered by sortOrder then id, and currency AUD
+      - list() filters by status, categorySlug and featured, ordered featured DESC, created_at DESC, id DESC
+      - Duplicate slug throws UniqueViolationError('slug')
+      - Deleting a category nulls categoryId on its products
+  - id: DB-003
+    title: Image, admin and session repositories
+    layer: database
+    points: 3
+    depends_on: [DB-001]
+    contracts_touched: [contracts/modules.ts#ImageRepo, contracts/modules.ts#AdminRepo, contracts/modules.ts#SessionRepo]
+    acceptance:
+      - Image create assigns sortOrder = max + 1. url is "/uploads/" + filename
+      - Admin getByEmail is case-insensitive. upsert replaces the hash for an existing email
+      - Session get returns expiresAt as a Date. deleteExpired removes only past rows
+  - id: DB-004
+    title: Seed script with admin, 3 categories, 6 published products and SVG placeholder art
+    layer: database
+    points: 3
+    depends_on: [DB-002, DB-003, AUTH-001]
+    contracts_touched: [contracts/env.example]
+    acceptance:
+      - npm run seed is idempotent. Catalogue seeded only when products is empty. The admin is always upserted
+      - Each seeded product has at least 1 SVG image file written to UPLOAD_DIR
+
+  # ---------------- auth (8 pts) ----------------
+  - id: AUTH-001
+    title: scrypt password hashing and verification
+    layer: auth
+    points: 2
+    depends_on: []
+    contracts_touched: [contracts/auth.md#password-storage]
+    acceptance:
+      - The hash format matches auth.md. verifyPassword is true for the right password and false for a wrong one or malformed hash
+  - id: AUTH-002
+    title: Session issue, lookup, expiry and requireAdmin middleware
+    layer: auth
+    points: 3
+    depends_on: []
+    contracts_touched: [contracts/auth.md#session-token, contracts/auth.md#middleware]
+    acceptance:
+      - Only sha256(token) is stored
+      - Expired session gives 401 UNAUTHENTICATED and the row is deleted
+      - requireAdmin sets req.admin
+  - id: AUTH-003
+    title: Login, logout and me routes
+    layer: auth
+    points: 3
+    depends_on: [AUTH-001, AUTH-002]
+    contracts_touched: [contracts/auth.md#routes, contracts/openapi.yaml#/paths/~1auth~1login]
+    acceptance:
+      - Correct credentials give 200 and a Set-Cookie with HttpOnly and SameSite=Strict
+      - Wrong password and unknown email return the identical 401 body
+      - Logout is idempotent and clears the cookie
+
+  # ---------------- security (10 pts) ----------------
+  - id: SEC-001
+    title: Threat model
+    layer: security
+    points: 2
+    depends_on: []
+    contracts_touched: []
+    acceptance:
+      - docs/threat-model.md lists assets, trust boundaries, threats and the mitigation owner for each
+  - id: SEC-002
+    title: securityHeaders and csrfGuard middleware
+    layer: security
+    points: 3
+    depends_on: []
+    contracts_touched: [contracts/modules.ts#SecurityModule, contracts/auth.md#csrf]
+    acceptance:
+      - CSP blocks inline script and framing. nosniff and Referrer-Policy are set
+      - POST without the header gives 403 CSRF_REJECTED. GET passes
+  - id: SEC-003
+    title: rateLimiter and isAllowedAmazonUrl
+    layer: security
+    points: 2
+    depends_on: []
+    contracts_touched: [contracts/modules.ts#SecurityModule, contracts/openapi.yaml#/components/schemas/AmazonUrl]
+    acceptance:
+      - Request max+1 within the window gives 429 RATE_LIMITED with Retry-After
+      - Rejects http, look-alike hosts (amazon.com.evil.io, evilamazon.com), userinfo, javascript and data URLs
+  - id: SEC-004
+    title: Review of the assembled system
+    layer: security
+    points: 3
+    depends_on: [BE-001, BE-002, BE-003, BE-004, FE-006]
+    contracts_touched: []
+    acceptance:
+      - Every Gate 3 check is reported pass or fail, with defects filed against their owning layer
+
+  # ---------------- backend (15 pts) ----------------
+  - id: BE-001
+    title: Public catalogue routes (health, categories, products, product by slug)
+    layer: backend
+    points: 3
+    depends_on: [DB-002]
+    contracts_touched: [contracts/openapi.yaml#/paths/~1products]
+    acceptance:
+      - Drafts never appear in /products and return 404 on /products/{slug}
+      - category and featured filters work. Public responses contain no status, categoryId or timestamps
+  - id: BE-002
+    title: Admin product CRUD with zod validation and slug generation
+    layer: backend
+    points: 5
+    depends_on: [DB-002, AUTH-002, SEC-003]
+    contracts_touched: [contracts/openapi.yaml#/paths/~1admin~1products, contracts/types.ts#ProductInput]
+    acceptance:
+      - Every rule in ProductInput is enforced with field-level details
+      - A non-Amazon amazonUrl is rejected
+      - DELETE removes the product's image files from disk
+  - id: BE-003
+    title: Image upload, patch and delete
+    layer: backend
+    points: 5
+    depends_on: [DB-003, AUTH-002]
+    contracts_touched: [contracts/openapi.yaml#/paths/~1admin~1products~1{id}~1images]
+    acceptance:
+      - A PNG named evil.html is accepted as .png. An HTML file named photo.jpg gets 415
+      - Over 5 MB gives 413 FILE_TOO_LARGE. A 9th image gives 409 IMAGE_LIMIT_REACHED
+  - id: BE-004
+    title: Admin category routes
+    layer: backend
+    points: 2
+    depends_on: [DB-002, AUTH-002]
+    contracts_touched: [contracts/openapi.yaml#/paths/~1admin~1categories]
+    acceptance:
+      - Create, update and delete work. A duplicate slug gives 409 SLUG_TAKEN
+
+  # ---------------- frontend (23 pts) ----------------
+  - id: FE-001
+    title: Design system, layout shell, router, typed API client
+    layer: frontend
+    points: 5
+    depends_on: []
+    acceptance:
+      - The API client sends X-Saltline-CSRF on non-GET requests and parses ApiError into a typed error
+      - Header and footer nav work at 360px width with no horizontal scroll
+  - id: FE-002
+    title: Home, shop (category filter) and product detail with Buy on Amazon
+    layer: frontend
+    points: 5
+    depends_on: [FE-001]
+    acceptance:
+      - Loading, empty, error and success states on every data view
+      - The Buy button opens amazonUrl in a new tab with rel="noopener noreferrer sponsored"
+  - id: FE-003
+    title: About and Size Guide pages
+    layer: frontend
+    points: 2
+    depends_on: [FE-001]
+  - id: FE-004
+    title: Admin login and route guard
+    layer: frontend
+    points: 3
+    depends_on: [FE-001]
+    acceptance:
+      - Unauthenticated /admin/* redirects to /admin/login. Login errors are shown inline
+  - id: FE-005
+    title: Admin product list and product editor (create and edit, including categories)
+    layer: frontend
+    points: 5
+    depends_on: [FE-004]
+    acceptance:
+      - Field-level VALIDATION_FAILED details are shown next to the matching inputs
+  - id: FE-006
+    title: Admin image manager (upload, alt text, reorder, delete)
+    layer: frontend
+    points: 3
+    depends_on: [FE-005]
+
+# Contract change log
+# v2 (accepted from security, non-blocking): CSRF guard exempts OPTIONS as well as GET/HEAD;
+#    AmazonUrl rules tightened to match isAllowedAmazonUrl (ASCII only, no port, no userinfo,
+#    no percent-encoding). Affects: database seed URLs (must comply), backend (calls the
+#    function, so no change), frontend (no change; client-side pre-checks are optional).
+# CR from backend (BE-001, non-blocking): accepted. Glue errorHandler now maps Express 4xx
+#    errors (e.g. URIError from malformed percent-encoding) to 400 VALIDATION_FAILED / 404
+#    instead of 500. Glue-only fix; no contract text change.
+# v3 (DEF-002 from SEC-004, glue): TRUST_PROXY env var added to AppConfig/env.example and wired
+#    into app.set('trust proxy'). Startup warns when production runs without COOKIE_SECURE.
+#    Root .env.example refreshed from contracts/env.example.
+# DEF-001 (security layer): upgrade-insecure-requests tied to cookieSecure; routed to security.
+
+# ---------------- round 4: real catalogue + rebrand (2026-10-07) ----------------
+# The business is 2A Marketing Pty Ltd. Owner supplied 7 product photos; the orchestrator
+# removed the mannequin heads and wrote catalogue/products.json + catalogue/images/.
+round4:
+  - id: DB-005
+    title: Seed loads the real catalogue from catalogue/ instead of the SVG sample shirts
+    layer: database
+    points: 3
+    depends_on: [DB-004]
+    acceptance:
+      - npm run seed on an empty database creates the 4 categories and 7 published products in catalogue/products.json
+      - Each catalogue image is copied into UPLOAD_DIR under a random 32-hex name with its original extension and linked with its alt text
+      - Every amazonUrl passes isAllowedAmazonUrl. The seed fails loudly (non-zero exit, no partial catalogue) if the file is invalid or an image is missing
+      - Still idempotent. The catalogue is skipped when products already exist, and the admin is always upserted
+  - id: FE-007
+    title: Rebrand Saltline to 2A Marketing and refit copy to the real range
+    layer: frontend
+    points: 3
+    depends_on: [FE-001, FE-002, FE-003]
+    acceptance:
+      - No visible "Saltline" anywhere in the UI, titles, meta tags or favicon. The legal name 2A Marketing Pty Ltd appears in the footer
+      - The copy covers the actual range (Australian scenes, vintage motors, essentials, seasonal), with no invented business facts

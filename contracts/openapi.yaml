@@ -1,0 +1,368 @@
+openapi: 3.1.0
+info:
+  title: Saltline Sydney API
+  version: "2"   # contract version
+  description: |
+    READ ONLY for subagents. Every route the server exposes is listed here.
+    All bodies are JSON except the image upload (multipart/form-data).
+    Every non-GET/HEAD/OPTIONS request must carry `X-Saltline-CSRF: 1`, or it gets 403 CSRF_REJECTED.
+    Every error uses the envelope in contracts/errors.md (schema ApiError below).
+    Shapes mirror contracts/types.ts exactly.
+
+    Validation rules (backend layer, using zod):
+    - Unknown properties in JSON bodies are rejected (strict objects) with VALIDATION_FAILED.
+    - Strings are trimmed before length checks, except passwords.
+    - Path parameters `{id}` and `{imageId}` must be positive integers, else 400 VALIDATION_FAILED.
+    - A slug omitted or "" is generated from the name: lowercase, NFKD with diacritics removed,
+      non-alphanumerics collapsed to "-", leading and trailing "-" trimmed, max 80 chars.
+      If that yields "", use "shirt" (products) or "category" (categories). On create, a generated
+      slug that collides gets "-2", "-3", ... appended. An explicitly supplied slug that collides
+      returns 409 SLUG_TAKEN.
+servers:
+  - url: /api
+
+components:
+  securitySchemes:
+    adminSession:
+      type: apiKey
+      in: cookie
+      name: saltline_session
+
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+    ImageId:
+      name: imageId
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+
+  responses:
+    Error400: { description: VALIDATION_FAILED or INVALID_JSON, content: { application/json: { schema: { $ref: '#/components/schemas/ApiError' } } } }
+    Error401: { description: UNAUTHENTICATED, content: { application/json: { schema: { $ref: '#/components/schemas/ApiError' } } } }
+    Error404: { description: NOT_FOUND, content: { application/json: { schema: { $ref: '#/components/schemas/ApiError' } } } }
+    Error409: { description: SLUG_TAKEN or IMAGE_LIMIT_REACHED, content: { application/json: { schema: { $ref: '#/components/schemas/ApiError' } } } }
+
+  schemas:
+    Size: { type: string, enum: [XS, S, M, L, XL, XXL] }
+    ProductStatus: { type: string, enum: [draft, published] }
+    Slug:
+      type: string
+      pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+      maxLength: 80
+    AmazonUrl:
+      type: string
+      maxLength: 2048
+      description: |
+        Must parse with the WHATWG URL parser, use protocol "https:", have no username or password,
+        and have a hostname (lowercased) exactly equal to one of: amazon.com.au, www.amazon.com.au,
+        amazon.com, www.amazon.com, amzn.to, amzn.asia. Additionally (contract v2): the raw string
+        must be printable ASCII 0x21-0x7E only (no spaces, no backslash), must start with "https://"
+        (any case), and the authority as typed must equal the allowed hostname exactly, with no port
+        (not even :443), no percent-encoding, no userinfo (even empty) and no extra slashes.
+        Checked by security's isAllowedAmazonUrl().
+        Failure: VALIDATION_FAILED with field "amazonUrl", message "Must be an https link to Amazon."
+    Colour:
+      type: object
+      additionalProperties: false
+      required: [name, hex]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 40 }
+        hex: { type: string, pattern: '^#[0-9a-fA-F]{6}$', description: Stored and returned uppercased }
+    Category:
+      type: object
+      required: [id, slug, name, sortOrder]
+      properties:
+        id: { type: integer }
+        slug: { $ref: '#/components/schemas/Slug' }
+        name: { type: string }
+        sortOrder: { type: integer }
+    CategoryRef:
+      type: object
+      required: [slug, name]
+      properties: { slug: { type: string }, name: { type: string } }
+    ProductImage:
+      type: object
+      required: [id, url, alt, sortOrder]
+      properties:
+        id: { type: integer }
+        url: { type: string, description: '"/uploads/<filename>"' }
+        alt: { type: string }
+        sortOrder: { type: integer }
+    ProductSummary:
+      type: object
+      required: [id, slug, name, priceCents, currency, category, primaryImage, colours, featured]
+      properties:
+        id: { type: integer }
+        slug: { type: string }
+        name: { type: string }
+        priceCents: { type: integer }
+        currency: { type: string, const: AUD }
+        category: { oneOf: [ { $ref: '#/components/schemas/CategoryRef' }, { type: 'null' } ] }
+        primaryImage: { oneOf: [ { $ref: '#/components/schemas/ProductImage' }, { type: 'null' } ] }
+        colours: { type: array, items: { $ref: '#/components/schemas/Colour' } }
+        featured: { type: boolean }
+    Product:
+      allOf:
+        - $ref: '#/components/schemas/ProductSummary'
+        - type: object
+          required: [description, sizes, images, amazonUrl]
+          properties:
+            description: { type: string }
+            sizes: { type: array, items: { $ref: '#/components/schemas/Size' } }
+            images: { type: array, items: { $ref: '#/components/schemas/ProductImage' } }
+            amazonUrl: { type: string }
+    AdminProduct:
+      allOf:
+        - $ref: '#/components/schemas/Product'
+        - type: object
+          required: [categoryId, status, createdAt, updatedAt]
+          properties:
+            categoryId: { type: [integer, 'null'] }
+            status: { $ref: '#/components/schemas/ProductStatus' }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+    ProductInput:
+      type: object
+      additionalProperties: false
+      required: [name, description, priceCents, categoryId, colours, sizes, amazonUrl, featured, status]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        slug: { oneOf: [ { $ref: '#/components/schemas/Slug' }, { const: '' } ] }
+        description: { type: string, maxLength: 4000 }
+        priceCents: { type: integer, minimum: 0, maximum: 1000000 }
+        categoryId:
+          type: [integer, 'null']
+          description: Must reference an existing category, else VALIDATION_FAILED on field "categoryId"
+        colours: { type: array, maxItems: 12, items: { $ref: '#/components/schemas/Colour' } }
+        sizes:
+          type: array
+          maxItems: 6
+          uniqueItems: true
+          items: { $ref: '#/components/schemas/Size' }
+          description: Duplicates rejected. Stored and returned in canonical XS..XXL order.
+        amazonUrl: { $ref: '#/components/schemas/AmazonUrl' }
+        featured: { type: boolean }
+        status: { $ref: '#/components/schemas/ProductStatus' }
+    CategoryInput:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 60 }
+        slug: { oneOf: [ { $ref: '#/components/schemas/Slug' }, { const: '' } ] }
+        sortOrder: { type: integer, minimum: -1000, maximum: 1000, default: 0 }
+    ImageUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        alt: { type: string, maxLength: 200 }
+        sortOrder: { type: integer, minimum: 0, maximum: 1000 }
+    AdminUser:
+      type: object
+      required: [id, email]
+      properties: { id: { type: integer }, email: { type: string } }
+    SessionResponse:
+      type: object
+      required: [user]
+      properties: { user: { $ref: '#/components/schemas/AdminUser' } }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, minLength: 1, maxLength: 254 }
+        password: { type: string, minLength: 1, maxLength: 200 }
+    ApiError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details:
+              type: array
+              items:
+                type: object
+                required: [field, message]
+                properties: { field: { type: string }, message: { type: string } }
+
+paths:
+  /health:
+    get:
+      summary: Liveness check
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: object, properties: { status: { const: ok } } } } } }
+
+  /categories:
+    get:
+      summary: All categories, ordered by sortOrder then name
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/Category' } } } } } } }
+
+  /products:
+    get:
+      summary: Published products only, ordered by featured DESC, createdAt DESC
+      parameters:
+        - { name: category, in: query, schema: { type: string }, description: 'Category slug. An unknown slug returns { items: [] }' }
+        - { name: featured, in: query, schema: { type: string, enum: ['true'] }, description: 'If "true", featured products only. Any other value is ignored' }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/ProductSummary' } } } } } } }
+
+  /products/{slug}:
+    get:
+      summary: One published product. Drafts return 404, identical to a missing product.
+      parameters: [ { name: slug, in: path, required: true, schema: { type: string } } ]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Product' } } } }
+        '404': { $ref: '#/components/responses/Error404' }
+
+  /auth/login:
+    post:
+      summary: Admin login. See contracts/auth.md.
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/LoginRequest' } } } }
+      responses:
+        '200': { description: Logged in; Set-Cookie saltline_session, content: { application/json: { schema: { $ref: '#/components/schemas/SessionResponse' } } } }
+        '400': { $ref: '#/components/responses/Error400' }
+        '401': { description: INVALID_CREDENTIALS }
+        '429': { description: RATE_LIMITED; Retry-After header }
+
+  /auth/logout:
+    post:
+      summary: Clears the session. Idempotent.
+      responses:
+        '204': { description: Logged out }
+
+  /auth/me:
+    get:
+      security: [ { adminSession: [] } ]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SessionResponse' } } } }
+        '401': { $ref: '#/components/responses/Error401' }
+
+  /admin/products:
+    get:
+      security: [ { adminSession: [] } ]
+      summary: All products, every status, same ordering as /products
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/AdminProduct' } } } } } } }
+        '401': { $ref: '#/components/responses/Error401' }
+    post:
+      security: [ { adminSession: [] } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ProductInput' } } } }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/AdminProduct' } } } }
+        '400': { $ref: '#/components/responses/Error400' }
+        '401': { $ref: '#/components/responses/Error401' }
+        '409': { $ref: '#/components/responses/Error409' }
+
+  /admin/products/{id}:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    get:
+      security: [ { adminSession: [] } ]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/AdminProduct' } } } }
+        '401': { $ref: '#/components/responses/Error401' }
+        '404': { $ref: '#/components/responses/Error404' }
+    put:
+      security: [ { adminSession: [] } ]
+      summary: Full replace. An omitted or "" slug keeps the existing slug (it is not regenerated on update).
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ProductInput' } } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/AdminProduct' } } } }
+        '400': { $ref: '#/components/responses/Error400' }
+        '401': { $ref: '#/components/responses/Error401' }
+        '404': { $ref: '#/components/responses/Error404' }
+        '409': { $ref: '#/components/responses/Error409' }
+    delete:
+      security: [ { adminSession: [] } ]
+      summary: Deletes the product, its image rows and its image files on disk
+      responses:
+        '204': { description: Deleted }
+        '401': { $ref: '#/components/responses/Error401' }
+        '404': { $ref: '#/components/responses/Error404' }
+
+  /admin/products/{id}/images:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    post:
+      security: [ { adminSession: [] } ]
+      summary: |
+        Upload one image. The type is decided by magic bytes, never by the client's filename or
+        mimetype: JPEG (FF D8 FF), PNG (89 50 4E 47 0D 0A 1A 0A), WebP ("RIFF"....."WEBP").
+        Saved as <32 random hex chars>.<jpg|png|webp> in UPLOAD_DIR. Max 8 per product.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image: { type: string, format: binary, description: 'Max 5 MB' }
+                alt: { type: string, maxLength: 200, description: 'Defaults to the product name' }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/ProductImage' } } } }
+        '400': { $ref: '#/components/responses/Error400' }
+        '401': { $ref: '#/components/responses/Error401' }
+        '404': { $ref: '#/components/responses/Error404' }
+        '409': { description: IMAGE_LIMIT_REACHED }
+        '413': { description: FILE_TOO_LARGE }
+        '415': { description: UNSUPPORTED_MEDIA_TYPE }
+
+  /admin/products/{id}/images/{imageId}:
+    parameters: [ { $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/ImageId' } ]
+    patch:
+      security: [ { adminSession: [] } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ImageUpdate' } } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ProductImage' } } } }
+        '400': { $ref: '#/components/responses/Error400' }
+        '401': { $ref: '#/components/responses/Error401' }
+        '404': { $ref: '#/components/responses/Error404' }
+    delete:
+      security: [ { adminSession: [] } ]
+      summary: Deletes the row and the file. An already-missing file is not an error.
+      responses:
+        '204': { description: Deleted }
+        '401': { $ref: '#/components/responses/Error401' }
+        '404': { $ref: '#/components/responses/Error404' }
+
+  /admin/categories:
+    post:
+      security: [ { adminSession: [] } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CategoryInput' } } } }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Category' } } } }
+        '400': { $ref: '#/components/responses/Error400' }
+        '401': { $ref: '#/components/responses/Error401' }
+        '409': { $ref: '#/components/responses/Error409' }
+
+  /admin/categories/{id}:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    put:
+      security: [ { adminSession: [] } ]
+      summary: An omitted or "" slug keeps the existing slug.
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CategoryInput' } } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Category' } } } }
+        '400': { $ref: '#/components/responses/Error400' }
+        '401': { $ref: '#/components/responses/Error401' }
+        '404': { $ref: '#/components/responses/Error404' }
+        '409': { $ref: '#/components/responses/Error409' }
+    delete:
+      security: [ { adminSession: [] } ]
+      summary: Products in this category become uncategorised (categoryId null)
+      responses:
+        '204': { description: Deleted }
+        '401': { $ref: '#/components/responses/Error401' }
+        '404': { $ref: '#/components/responses/Error404' }
+
+# Served by the glue (not part of /api):
+#   GET /uploads/<filename>  static files from UPLOAD_DIR, 404 if missing
+#   GET /*                   in production, dist/ui with SPA fallback to index.html
