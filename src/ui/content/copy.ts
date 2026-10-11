@@ -35,15 +35,15 @@ export const HOME = {
 };
 
 export const ABOUT = {
-  title: 'Proudly Australian, through and through',
+  title: 'Proudly Australian',
   intro:
-    '2A Marketing is a Sydney business, and we love Australia more than anything. This site brings the whole range together in one place.',
+    '2A Marketing is a Sydney business that loves where it comes from. This site brings the whole range together in one place.',
   paragraphs: [
-    'Australia comes first, always. One shirt carries a 1938 photo of traffic crossing the Sydney Harbour Bridge under a big SYDNEY heading. Another shows the Opera House and the bridge at sunset, seen across the water. The third crosses Bass Strait to a misty gorge in Tasmania, as wild and beautiful as this country gets.',
-    'Then come a few favourites of ours. Two shirts carry black and silver prints of classic open-top racing cars: No. 81 on stone and No. 07 on cream. There is a plain black crew for every day, and a black Christmas tee with Santa walking toward a Welcome New Year sign, ready for a summer Christmas.',
+    'Most of the range is Australian. One shirt carries a 1938 photo of traffic crossing the Sydney Harbour Bridge under a big SYDNEY heading. Another shows the Opera House and the bridge at sunset, seen across the water. The third is a misty gorge in Tasmania.',
+    'The rest are a few favourites of ours. Two shirts carry black and silver prints of classic open-top racing cars: No. 81 on stone and No. 07 on cream. There is a plain black crew for every day, and a black Christmas tee with Santa walking toward a Welcome New Year sign, ready for a summer Christmas.',
     "Each shirt has its own page here with photos, colours and sizes. Our shirts are sold on Amazon, eBay, Depop and Poshmark, and at stalls across Sydney.",
   ],
-  signoff: 'Thanks for stopping by. Wear it proud.',
+  signoff: 'Thanks for having a look around.',
 };
 
 export interface SizeRow {

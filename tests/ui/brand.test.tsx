@@ -70,7 +70,7 @@ describe('2A Marketing brand', () => {
   it('suffixes page titles with the brand', async () => {
     everythingFetch();
     renderAt('/about');
-    expect(await screen.findByRole('heading', { level: 1, name: 'Proudly Australian, through and through' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Proudly Australian' })).toBeInTheDocument();
     expect(document.title).toBe('About · 2A Marketing');
     expect(screen.getByText('2A Marketing, Sydney')).toBeInTheDocument();
   });
