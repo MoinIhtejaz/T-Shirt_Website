@@ -167,13 +167,13 @@ describe('SEC-004 /uploads route', () => {
     expect(followed.status).toBe(404);
   });
 
-  it('every seeded product link passes the Amazon allow-list end to end', async () => {
+  it('every seeded product link is null or passes the Amazon allow-list end to end', async () => {
     const { isAllowedAmazonUrl } = await import('../../src/security/index');
     const res = await request(t.app).get('/api/products');
     expect(res.body.items.length).toBeGreaterThan(0);
     for (const item of res.body.items as Array<{ slug: string }>) {
       const p = await request(t.app).get(`/api/products/${item.slug}`);
-      expect(isAllowedAmazonUrl(p.body.amazonUrl), p.body.amazonUrl).toBe(true);
+      if (p.body.amazonUrl !== null) expect(isAllowedAmazonUrl(p.body.amazonUrl), p.body.amazonUrl).toBe(true);
     }
   });
 

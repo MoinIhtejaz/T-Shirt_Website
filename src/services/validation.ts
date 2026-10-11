@@ -134,11 +134,14 @@ export function productInputSchema(isAllowedAmazonUrl: (url: string) => boolean)
       .nullable(),
     colours: z.array(colourSchema).max(12),
     sizes: sizesSchema,
+    // null or "" means no Amazon listing yet, stored as null.
     amazonUrl: z
       .string()
       .trim()
       .max(2048, { error: 'Must be 2048 characters or fewer.', abort: true })
-      .refine((url) => isAllowedAmazonUrl(url), { error: AMAZON_MESSAGE }),
+      .refine((url) => url === '' || isAllowedAmazonUrl(url), { error: AMAZON_MESSAGE })
+      .transform((url) => (url === '' ? null : url))
+      .nullable(),
     featured: z.boolean(),
     status: z.enum(['draft', 'published'], {
       error: (iss) => (iss.input === undefined ? undefined : 'Must be draft or published.'),

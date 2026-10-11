@@ -132,18 +132,24 @@ function ProductDetail({ product }: { product: Product }) {
           ) : null}
 
           <div className="product__buy">
-            <a
-              className="btn btn--primary btn--buy"
-              href={product.amazonUrl}
-              target="_blank"
-              rel="noopener noreferrer sponsored"
-            >
-              Buy on Amazon <ArrowUpRight />
-              <span className="visually-hidden"> (opens in a new tab)</span>
-            </a>
-            <p className="product__note">
-              Price and availability are confirmed on Amazon and may differ from what's shown here.
-            </p>
+            {product.amazonUrl ? (
+              <>
+                <a
+                  className="btn btn--primary btn--buy"
+                  href={product.amazonUrl}
+                  target="_blank"
+                  rel="noopener noreferrer sponsored"
+                >
+                  Buy on Amazon <ArrowUpRight />
+                  <span className="visually-hidden"> (opens in a new tab)</span>
+                </a>
+                <p className="product__note">
+                  Price and availability are confirmed on Amazon and may differ from what's shown here.
+                </p>
+              </>
+            ) : (
+              <p className="product__note">This shirt is coming to Amazon soon.</p>
+            )}
           </div>
 
           {paragraphs.length > 0 ? (

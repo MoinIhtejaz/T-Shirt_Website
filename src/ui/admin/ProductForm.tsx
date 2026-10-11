@@ -54,7 +54,7 @@ function toValues(p: AdminProduct | null): FormValues {
     categoryId: p.categoryId === null ? '' : String(p.categoryId),
     colours: p.colours.map((c) => ({ key: nextKey(), name: c.name, hex: c.hex })),
     sizes: SIZES.filter((s) => p.sizes.includes(s)),
-    amazonUrl: p.amazonUrl,
+    amazonUrl: p.amazonUrl ?? '',
     featured: p.featured,
     status: p.status,
   };
@@ -275,7 +275,7 @@ export function ProductForm({ product, categories, submitLabel, onSubmit, onErro
           id={fid('amazonUrl')}
           label="Amazon link"
           error={err('amazonUrl')}
-          hint="Paste the https link to the Amazon listing (amazon.com.au, amazon.com, amzn.to or amzn.asia)."
+          hint="Optional. Paste the https link to the Amazon listing (amazon.com.au, amazon.com, amzn.to or amzn.asia). Leave it empty if the shirt isn't on Amazon yet; the site then shows no Buy button."
         >
           {(a) => (
             <input

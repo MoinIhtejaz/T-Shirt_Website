@@ -148,19 +148,22 @@ describe('SEC-004 server source and repo hygiene', () => {
     expect(example).toMatch(/^COOKIE_SECURE=false$/m);
   });
 
-  it('every product loadCatalogue() would seed has an amazonUrl that passes isAllowedAmazonUrl', () => {
+  it('every product loadCatalogue() would seed has a null amazonUrl or one that passes isAllowedAmazonUrl', () => {
     const { products } = loadCatalogue();
     expect(products.length).toBeGreaterThan(0);
-    for (const p of products) expect(isAllowedAmazonUrl(p.amazonUrl), `${p.slug}: ${p.amazonUrl}`).toBe(true);
+    for (const p of products) {
+      if (p.amazonUrl !== null) expect(isAllowedAmazonUrl(p.amazonUrl), `${p.slug}: ${p.amazonUrl}`).toBe(true);
+    }
   });
 
-  it('every amazonUrl in catalogue/products.json passes isAllowedAmazonUrl (read directly, not via the loader)', () => {
+  it('every amazonUrl in catalogue/products.json is null or passes isAllowedAmazonUrl (read directly, not via the loader)', () => {
     const raw = JSON.parse(fs.readFileSync(path.join(PROJECT_ROOT, 'catalogue/products.json'), 'utf8')) as {
       products?: Array<{ slug?: unknown; amazonUrl?: unknown }>;
     };
     expect(Array.isArray(raw.products)).toBe(true);
     expect(raw.products!.length).toBeGreaterThan(0);
     for (const p of raw.products!) {
+      if (p.amazonUrl === null) continue;
       expect(typeof p.amazonUrl, String(p.slug)).toBe('string');
       expect(isAllowedAmazonUrl(p.amazonUrl as string), `${String(p.slug)}: ${String(p.amazonUrl)}`).toBe(true);
     }

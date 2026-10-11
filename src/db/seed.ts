@@ -48,7 +48,7 @@ export interface CatalogueProduct {
   priceCents: number;
   colours: Colour[];
   sizes: Size[];
-  amazonUrl: string;
+  amazonUrl: string | null; // null => no Amazon listing yet
   featured: boolean;
   images: CatalogueImage[];
 }
@@ -194,8 +194,8 @@ function parseProduct(raw: unknown, index: number, categorySlugs: Set<string>, i
   const sizes = SIZES.filter((size) => sizeList.includes(size));
 
   const amazonUrl = raw.amazonUrl;
-  if (typeof amazonUrl !== 'string' || !isAllowedAmazonUrl(amazonUrl)) {
-    throw new CatalogueError(`${where} field "amazonUrl" must be an https link to Amazon`);
+  if (amazonUrl !== null && (typeof amazonUrl !== 'string' || !isAllowedAmazonUrl(amazonUrl))) {
+    throw new CatalogueError(`${where} field "amazonUrl" must be null or an https link to Amazon`);
   }
   if (typeof raw.featured !== 'boolean') throw new CatalogueError(`${where} field "featured" must be true or false`);
 

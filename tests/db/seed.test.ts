@@ -28,6 +28,7 @@ const realJson = JSON.parse(fs.readFileSync(path.join(REAL_CATALOGUE, 'products.
     slug: string;
     name: string;
     category: string;
+    amazonUrl: string | null;
     featured: boolean;
     images: { file: string; alt: string }[];
   }[];
@@ -120,7 +121,8 @@ describe('seedDatabase with the real catalogue (DB-005)', () => {
       expect(p.featured).toBe(expected.featured);
       expect(p.status).toBe('published');
       expect(p.sizes).toEqual(SIZES.filter((s) => p.sizes.includes(s)));
-      expect(isAllowedAmazonUrl(p.amazonUrl), p.amazonUrl).toBe(true);
+      expect(p.amazonUrl).toBe(expected.amazonUrl);
+      if (p.amazonUrl !== null) expect(isAllowedAmazonUrl(p.amazonUrl), p.amazonUrl).toBe(true);
     }
     expect(repos.products.list({ featured: true }).map((p) => p.slug).sort()).toEqual(
       realJson.products.filter((p) => p.featured).map((p) => p.slug).sort(),
@@ -300,7 +302,7 @@ describe('seedDatabase with fixture catalogues (DB-005)', () => {
   ])('a non-Amazon URL (%s) throws and writes nothing', async (amazonUrl) => {
     const dir = writeCatalogue([fixtureProduct({ amazonUrl })]);
     await expect(seedDatabase(db, uploadDir, admin, fakeHash, { catalogueDir: dir })).rejects.toThrow(
-      /product "fixture-tee" field "amazonUrl" must be an https link to Amazon/,
+      /product "fixture-tee" field "amazonUrl" must be null or an https link to Amazon/,
     );
     expectNothingWritten();
   });

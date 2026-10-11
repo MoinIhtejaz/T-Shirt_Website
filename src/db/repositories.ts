@@ -47,7 +47,7 @@ interface ProductRow {
   category_id: number | null;
   colours_json: string;
   sizes_json: string;
-  amazon_url: string;
+  amazon_url: string | null;
   featured: number;
   status: ProductStatus;
   created_at: string;
