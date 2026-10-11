@@ -239,7 +239,7 @@
   z-index: 1;
   max-width: var(--max);
   margin-inline: auto;
-  padding: clamp(2.5rem, 8vw, 6rem) var(--gutter) calc(var(--sun) * 0.5 + var(--wave-h) + 2.5rem);
+  padding: clamp(2.5rem, 8vw, 6rem) var(--gutter) calc(var(--bridge) * 0.2 + var(--wave-h) + 2.5rem);
 }
 
 .hero__eyebrow {
@@ -291,20 +291,44 @@
   margin-top: 1.75rem;
 }
 
-.hero__sun {
+.hero__bridge {
   position: absolute;
-  right: clamp(1rem, 10vw, 9rem);
-  bottom: calc(var(--wave-h) * 0.55 - var(--sun) / 2);
-  width: var(--sun);
-  height: var(--sun);
-  border-radius: 50%;
-  background: var(--coral-bright);
+  right: clamp(0rem, 6vw, 6rem);
+  bottom: calc(var(--wave-h) * 0.35);
+  width: var(--bridge);
+  height: auto;
   z-index: 0;
+  overflow: visible;
+}
+
+.bridge__truss,
+.bridge__hangers,
+.bridge__deck {
+  fill: none;
+  stroke: var(--harbour);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bridge__truss {
+  stroke-width: 2.5;
+}
+
+.bridge__hangers {
+  stroke-width: 1.5;
+}
+
+.bridge__deck {
+  stroke-width: 5;
+}
+
+.bridge__pylons {
+  fill: var(--harbour);
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .hero__sun {
-    animation: sunset 1.6s var(--ease-out) both;
+  .hero__bridge {
+    animation: bridge-rise 1.6s var(--ease-out) both;
   }
 
   .hero__title .hero__line {
@@ -316,11 +340,13 @@
   }
 }
 
-@keyframes sunset {
+@keyframes bridge-rise {
   from {
-    transform: translateY(-18%);
+    opacity: 0;
+    transform: translateY(8%);
   }
   to {
+    opacity: 1;
     transform: translateY(0);
   }
 }

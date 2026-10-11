@@ -4,6 +4,7 @@ import { useAsync } from '../hooks/useAsync';
 import { Seo } from '../components/Seo';
 import { ProductGrid } from '../components/ProductCard';
 import { CardSkeletons, EmptyState, ErrorState, LoadingState } from '../components/States';
+import { HarbourBridge } from '../components/HarbourBridge';
 import { Waterline } from '../components/Waterline';
 import { ArrowRight } from '../components/Icons';
 import { BRAND, HOME, SITE } from '../content/copy';
@@ -38,7 +39,7 @@ export function HomePage() {
             </Link>
           </div>
         </div>
-        <div className="hero__sun" aria-hidden="true" />
+        <HarbourBridge className="hero__bridge" />
         <Waterline className="hero__waterline" />
       </section>
 

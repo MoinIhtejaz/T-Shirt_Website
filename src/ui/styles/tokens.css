@@ -1,6 +1,6 @@
 /*
   2A Marketing design tokens: "coastal Sydney".
-  Sand meets harbour at a waterline; one sunset coral accent.
+  Sand meets harbour at a waterline, with the Harbour Bridge on it; one coral accent.
   Contrast (WCAG AA) checked for every text pairing used:
     ink on sand 14.1:1, ink-soft on sand 6.5:1, harbour on sand 7.6:1,
     paper on harbour 8.5:1, foam on harbour 5.4:1, white on coral 5.0:1,
@@ -53,7 +53,7 @@
 
   /* Signature */
   --wave-h: clamp(36px, 3vw + 24px, 64px);
-  --sun: clamp(120px, 22vw, 360px);
+  --bridge: clamp(220px, 34vw, 560px);
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
