@@ -58,7 +58,7 @@ describe('2A Marketing brand', () => {
 
     expect(screen.getByRole('link', { name: '2A Marketing home' })).toHaveAttribute('href', '/');
     expect(screen.getByText(`© ${year} 2A Marketing Pty Ltd`)).toBeInTheDocument();
-    expect(screen.getByText(/our shirts are sold on amazon, ebay, depop and poshmark, and at stalls across sydney/i)).toBeInTheDocument();
+    expect(screen.getByText(/our shirts are sold on amazon, ebay and depop, and at stalls across sydney/i)).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Love this land.Wear it proud.');
     expect(screen.getByRole('heading', { level: 2, name: 'Start with these' })).toBeInTheDocument();
     expect(document.title).toBe('2A Marketing');

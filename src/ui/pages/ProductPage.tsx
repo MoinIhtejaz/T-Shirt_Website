@@ -148,7 +148,7 @@ function ProductDetail({ product }: { product: Product }) {
                 </p>
               </>
             ) : (
-              <p className="product__note">Our shirts are sold on Amazon, eBay, Depop and Poshmark, and at stalls across Sydney.</p>
+              <p className="product__note">Our shirts are sold on Amazon, eBay and Depop, and at stalls across Sydney.</p>
             )}
           </div>
 
