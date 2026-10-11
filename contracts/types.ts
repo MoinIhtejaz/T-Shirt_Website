@@ -1,4 +1,4 @@
-// Contract version 4. Shared types for the HTTP API.
+// Contract version 5. Shared types for the HTTP API.
 // READ ONLY for subagents. File a change request to alter anything here.
 // Every JSON body crossing the API boundary uses exactly these shapes.
 
@@ -52,7 +52,7 @@ export interface Product extends ProductSummary {
   description: string; // plain text; newlines are paragraph breaks; never HTML
   sizes: Size[]; // always in SIZES order, no duplicates
   images: ProductImage[]; // ordered by sortOrder, then id
-  amazonUrl: string;
+  amazonUrl: string | null; // null => not on Amazon yet; the site shows no Buy button
 }
 
 /** Admin view: every product regardless of status. */
@@ -72,7 +72,7 @@ export interface ProductInput {
   categoryId: number | null;
   colours: Colour[];
   sizes: Size[];
-  amazonUrl: string;
+  amazonUrl: string | null; // null or "" => no Amazon link yet (stored as null)
   featured: boolean;
   status: ProductStatus;
 }

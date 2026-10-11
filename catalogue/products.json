@@ -1,10 +1,26 @@
 {
-  "note": "Catalogue for 2A Marketing Pty Ltd. Loaded by `npm run seed` into an empty database. Prices, sizes and Amazon links are placeholders until the owner supplies real ones.",
+  "note": "Catalogue for 2A Marketing Pty Ltd. Loaded by `npm run seed` into an empty database (and on every Vercel cold start). amazonUrl is null until each shirt has a real Amazon listing; the site then shows no Buy button. Prices, sizes and the size chart are placeholders until the owner supplies real ones.",
   "categories": [
-    { "slug": "australia", "name": "Australia", "sortOrder": 0 },
-    { "slug": "vintage-motors", "name": "Vintage Motors", "sortOrder": 1 },
-    { "slug": "essentials", "name": "Essentials", "sortOrder": 2 },
-    { "slug": "seasonal", "name": "Seasonal", "sortOrder": 3 }
+    {
+      "slug": "australia",
+      "name": "Australia",
+      "sortOrder": 0
+    },
+    {
+      "slug": "vintage-motors",
+      "name": "Vintage Motors",
+      "sortOrder": 1
+    },
+    {
+      "slug": "essentials",
+      "name": "Essentials",
+      "sortOrder": 2
+    },
+    {
+      "slug": "seasonal",
+      "name": "Seasonal",
+      "sortOrder": 3
+    }
   ],
   "products": [
     {
@@ -12,84 +28,196 @@
       "name": "Sydney Harbour Bridge 1938 Tee",
       "category": "australia",
       "description": "An old photograph of traffic crossing the Sydney Harbour Bridge, printed under a SYDNEY heading that reads New South Wales Australia, 1938.\nStone crew neck tee.",
-      "priceCents": 3995,
-      "colours": [{ "name": "Stone", "hex": "#D9D5C3" }],
-      "sizes": ["S", "M", "L", "XL", "XXL"],
-      "amazonUrl": "https://www.amazon.com.au/s?k=2A+Marketing+Sydney+Harbour+Bridge+1938+t-shirt",
+      "priceCents": 1400,
+      "colours": [
+        {
+          "name": "Stone",
+          "hex": "#D9D5C3"
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "amazonUrl": null,
       "featured": true,
-      "images": [{ "file": "sydney-harbour-bridge-1938.jpg", "alt": "Stone t-shirt with a 1938 photo of the Sydney Harbour Bridge under the word Sydney" }]
+      "images": [
+        {
+          "file": "sydney-harbour-bridge-1938.jpg",
+          "alt": "Stone t-shirt with a 1938 photo of the Sydney Harbour Bridge under the word Sydney"
+        }
+      ]
     },
     {
       "slug": "sydney-harbour-sunset-tee",
       "name": "Sydney Harbour Sunset Tee",
       "category": "australia",
       "description": "A full-colour photo print of the Opera House and the Harbour Bridge at sunset, seen across the water from the rocks.\nStone crew neck tee.",
-      "priceCents": 3995,
-      "colours": [{ "name": "Stone", "hex": "#D9D5C3" }],
-      "sizes": ["S", "M", "L", "XL", "XXL"],
-      "amazonUrl": "https://www.amazon.com.au/s?k=2A+Marketing+Sydney+Harbour+sunset+t-shirt",
+      "priceCents": 1400,
+      "colours": [
+        {
+          "name": "Stone",
+          "hex": "#D9D5C3"
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "amazonUrl": null,
       "featured": true,
-      "images": [{ "file": "sydney-harbour-sunset.jpg", "alt": "Stone t-shirt with a sunset photo of the Sydney Opera House and Harbour Bridge" }]
+      "images": [
+        {
+          "file": "sydney-harbour-sunset.jpg",
+          "alt": "Stone t-shirt with a sunset photo of the Sydney Opera House and Harbour Bridge"
+        }
+      ]
     },
     {
       "slug": "tasmania-tee",
       "name": "Tasmania Tee",
       "category": "australia",
       "description": "A full-colour photo print of a misty Tasmanian gorge under a stormy sky, with TASMANIA across the top.\nWhite crew neck tee.",
-      "priceCents": 3995,
-      "colours": [{ "name": "White", "hex": "#F4F4F1" }],
-      "sizes": ["S", "M", "L", "XL", "XXL"],
-      "amazonUrl": "https://www.amazon.com.au/s?k=2A+Marketing+Tasmania+t-shirt",
+      "priceCents": 1400,
+      "colours": [
+        {
+          "name": "White",
+          "hex": "#F4F4F1"
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "amazonUrl": null,
       "featured": false,
-      "images": [{ "file": "tasmania.jpg", "alt": "White t-shirt with a photo of a misty Tasmanian gorge under the word Tasmania" }]
+      "images": [
+        {
+          "file": "tasmania.jpg",
+          "alt": "White t-shirt with a photo of a misty Tasmanian gorge under the word Tasmania"
+        }
+      ]
     },
     {
       "slug": "vintage-racer-81-tee",
       "name": "Vintage Racer No. 81 Tee",
       "category": "vintage-motors",
       "description": "A detailed black and silver print of a classic open-top racing car wearing the number 81.\nStone crew neck tee.",
-      "priceCents": 3995,
-      "colours": [{ "name": "Stone", "hex": "#D9D5C3" }],
-      "sizes": ["S", "M", "L", "XL", "XXL"],
-      "amazonUrl": "https://www.amazon.com.au/s?k=2A+Marketing+vintage+racing+car+81+t-shirt",
+      "priceCents": 1400,
+      "colours": [
+        {
+          "name": "Stone",
+          "hex": "#D9D5C3"
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "amazonUrl": null,
       "featured": true,
-      "images": [{ "file": "vintage-racer-81.jpg", "alt": "Stone t-shirt with a black and silver print of a vintage racing car numbered 81" }]
+      "images": [
+        {
+          "file": "vintage-racer-81.jpg",
+          "alt": "Stone t-shirt with a black and silver print of a vintage racing car numbered 81"
+        }
+      ]
     },
     {
       "slug": "vintage-racer-07-tee",
       "name": "Vintage Racer No. 07 Tee",
       "category": "vintage-motors",
       "description": "A detailed black and silver print of a classic open-top racing car wearing the number 07.\nCream crew neck tee.",
-      "priceCents": 3995,
-      "colours": [{ "name": "Cream", "hex": "#E4E2D3" }],
-      "sizes": ["S", "M", "L", "XL", "XXL"],
-      "amazonUrl": "https://www.amazon.com.au/s?k=2A+Marketing+vintage+racing+car+07+t-shirt",
+      "priceCents": 1400,
+      "colours": [
+        {
+          "name": "Cream",
+          "hex": "#E4E2D3"
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "amazonUrl": null,
       "featured": false,
-      "images": [{ "file": "vintage-racer-07.jpg", "alt": "Cream t-shirt with a black and silver print of a vintage racing car numbered 07" }]
+      "images": [
+        {
+          "file": "vintage-racer-07.jpg",
+          "alt": "Cream t-shirt with a black and silver print of a vintage racing car numbered 07"
+        }
+      ]
     },
     {
       "slug": "essential-black-crew-tee",
       "name": "Essential Black Crew Tee",
       "category": "essentials",
       "description": "A plain black crew neck tee with no print.",
-      "priceCents": 2995,
-      "colours": [{ "name": "Black", "hex": "#1E212A" }],
-      "sizes": ["S", "M", "L", "XL", "XXL"],
-      "amazonUrl": "https://www.amazon.com.au/s?k=2A+Marketing+plain+black+crew+t-shirt",
+      "priceCents": 3400,
+      "colours": [
+        {
+          "name": "Black",
+          "hex": "#1E212A"
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "amazonUrl": null,
       "featured": false,
-      "images": [{ "file": "essential-black-crew.jpg", "alt": "Plain black crew neck t-shirt" }]
+      "images": [
+        {
+          "file": "essential-black-crew.jpg",
+          "alt": "Plain black crew neck t-shirt"
+        }
+      ]
     },
     {
       "slug": "merry-christmas-happy-new-year-tee",
       "name": "Merry Christmas & Happy New Year Tee",
       "category": "seasonal",
       "description": "Santa walks a winding path toward a Welcome New Year signpost, carrying a glowing heart, under red and white Merry Christmas and Happy New Year lettering.\nBlack crew neck tee.",
-      "priceCents": 3995,
-      "colours": [{ "name": "Black", "hex": "#1E212A" }],
-      "sizes": ["S", "M", "L", "XL", "XXL"],
-      "amazonUrl": "https://www.amazon.com.au/s?k=2A+Marketing+Merry+Christmas+Happy+New+Year+t-shirt",
+      "priceCents": 1400,
+      "colours": [
+        {
+          "name": "Black",
+          "hex": "#1E212A"
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "amazonUrl": null,
       "featured": false,
-      "images": [{ "file": "merry-christmas-happy-new-year.jpg", "alt": "Black t-shirt with Santa, a Welcome New Year sign and Merry Christmas and Happy New Year lettering" }]
+      "images": [
+        {
+          "file": "merry-christmas-happy-new-year.jpg",
+          "alt": "Black t-shirt with Santa, a Welcome New Year sign and Merry Christmas and Happy New Year lettering"
+        }
+      ]
     }
   ]
 }

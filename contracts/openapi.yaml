@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Saltline Sydney API
-  version: "4"   # contract version
+  version: "5"   # contract version
   description: |
     READ ONLY for subagents. Every route the server exposes is listed here.
     All bodies are JSON except the image upload (multipart/form-data).
@@ -114,7 +114,7 @@ components:
             description: { type: string }
             sizes: { type: array, items: { $ref: '#/components/schemas/Size' } }
             images: { type: array, items: { $ref: '#/components/schemas/ProductImage' } }
-            amazonUrl: { type: string }
+            amazonUrl: { type: [string, 'null'], description: 'null when the shirt has no Amazon listing yet' }
     AdminProduct:
       allOf:
         - $ref: '#/components/schemas/Product'
@@ -144,7 +144,9 @@ components:
           uniqueItems: true
           items: { $ref: '#/components/schemas/Size' }
           description: Duplicates rejected. Stored and returned in canonical XS..XXL order.
-        amazonUrl: { $ref: '#/components/schemas/AmazonUrl' }
+        amazonUrl:
+          description: 'null or "" means no Amazon link yet (stored and returned as null). Any other value must pass AmazonUrl.'
+          oneOf: [ { $ref: '#/components/schemas/AmazonUrl' }, { type: 'null' }, { const: '' } ]
         featured: { type: boolean }
         status: { $ref: '#/components/schemas/ProductStatus' }
     CategoryInput:

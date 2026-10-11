@@ -98,7 +98,7 @@ The Sydney Harbour Bridge, Sydney Harbour Sunset and Vintage Racer No. 81 tees a
 
 These details weren't in the photos, so I set placeholders. Please check them:
 
-- Prices: $39.95 for printed tees and $29.95 for the plain black crew.
+- Prices: $14 AUD for printed tees and $34 AUD for the plain black crew.
 - Sizes: S to XXL on every shirt.
 - Amazon links: searches for each shirt, not your actual listings.
 - Size chart: typical measurements, not yours.

@@ -1,4 +1,4 @@
-# Error contract (version 4)
+# Error contract (version 5)
 
 Every non-2xx JSON response from `/api/**` uses this envelope:
 

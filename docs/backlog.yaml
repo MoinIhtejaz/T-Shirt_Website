@@ -230,3 +230,12 @@ round4:
     acceptance:
       - No visible "Saltline" anywhere in the UI, titles, meta tags or favicon. The legal name 2A Marketing Pty Ltd appears in the footer
       - The copy covers the actual range (Australian scenes, vintage motors, essentials, seasonal), with no invented business facts
+
+# ---------------- round 6: no Amazon links yet (contract v5) ----------------
+# Owner asked to remove the Amazon links for now. amazonUrl becomes nullable end to end;
+# catalogue/products.json sets every amazonUrl to null.
+round6:
+  - {id: DB-008, layer: database, points: 3, title: "Migration 2 makes products.amazon_url nullable; repos and seed accept null"}
+  - {id: BE-005, layer: backend, points: 2, title: "ProductInput.amazonUrl accepts null or empty (stored null); public DTOs return null"}
+  - {id: FE-008, layer: frontend, points: 3, title: "No Buy button when amazonUrl is null; coming-soon note; admin field optional; copy works with no links"}
+  - {id: SEC-005, layer: security, points: 1, title: "Security tests accept null amazonUrl; non-null values still validated everywhere"}
