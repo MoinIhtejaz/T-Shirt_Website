@@ -62,7 +62,7 @@ export function ShopPage() {
 
   return (
     <div className="page shop">
-      <Seo title="Shop" description="Every 2A Marketing t-shirt in one place. Filter by category and buy on Amazon." />
+      <Seo title="Shop" description="Every 2A Marketing t-shirt in one place. Proudly Australian, from Sydney." />
       <header className="page-head container">
         <p className="eyebrow">The range</p>
         <h1 className="page-title">Shop</h1>

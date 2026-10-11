@@ -107,7 +107,7 @@ describe('home page', () => {
     renderAt('/');
     expect(await screen.findByText('Sydney Harbour Sunset Tee')).toBeInTheDocument();
     expect(calls[0].url).toBe('/api/products?featured=true');
-    expect(screen.getByRole('link', { name: /read about us/i })).toHaveAttribute('href', '/about');
+    expect(screen.getByRole('link', { name: /read our story/i })).toHaveAttribute('href', '/about');
   });
 });
 

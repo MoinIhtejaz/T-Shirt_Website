@@ -59,18 +59,18 @@ describe('2A Marketing brand', () => {
     expect(screen.getByRole('link', { name: '2A Marketing home' })).toHaveAttribute('href', '/');
     expect(screen.getByText(`© ${year} 2A Marketing Pty Ltd`)).toBeInTheDocument();
     expect(screen.getByText(/our shirts are sold on amazon/i)).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Our harbour,on your back.');
-    expect(screen.getByRole('heading', { level: 2, name: 'A few to start with' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Love this land.Wear it proud.');
+    expect(screen.getByRole('heading', { level: 2, name: 'Start with these' })).toBeInTheDocument();
     expect(document.title).toBe('2A Marketing');
     expect(document.head.querySelector('meta[name="description"]')?.getAttribute('content')).toMatch(
-      /^2A Marketing is a Sydney business/,
+      /^2A Marketing is a proudly Australian t-shirt business/,
     );
   });
 
   it('suffixes page titles with the brand', async () => {
     everythingFetch();
     renderAt('/about');
-    expect(await screen.findByRole('heading', { level: 1, name: 'Sydney first, then a few detours' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Proudly Australian, through and through' })).toBeInTheDocument();
     expect(document.title).toBe('About · 2A Marketing');
     expect(screen.getByText('2A Marketing, Sydney')).toBeInTheDocument();
   });

@@ -16,33 +16,34 @@ export const BRAND = {
 
 export const SITE = {
   description:
-    '2A Marketing is a Sydney business selling t-shirts on Amazon: photo prints of Sydney and Tasmania, vintage racing cars, a plain black crew and a Christmas tee.',
+    '2A Marketing is a proudly Australian t-shirt business from Sydney: photo prints of the Harbour Bridge, the Opera House and Tasmania, vintage racing cars, a plain black crew and a Christmas tee.',
 };
 
 export const HOME = {
-  eyebrow: 'T-shirts from Sydney',
-  headline: ['Our harbour,', 'on your back.'],
+  eyebrow: 'Proudly Australian, from Sydney',
+  headline: ['Love this land.', 'Wear it proud.'],
   lede:
-    'Photo print tees of the Harbour Bridge in 1938, the Opera House at sunset and a gorge in Tasmania. There are a couple of vintage racing cars, a plain black crew and a Christmas tee too. Have a look around, then buy the one you like on Amazon.',
+    'We love Australia more than anything, and these shirts show it. The Harbour Bridge in 1938, the Opera House at sunset, a wild Tasmanian gorge. There are vintage racing cars, a plain black crew and a Christmas tee too. Find the one that feels like home.',
   primaryCta: 'Shop all shirts',
-  secondaryCta: 'About us',
-  featuredTitle: 'A few to start with',
+  secondaryCta: 'Our story',
+  featuredTitle: 'Start with these',
   featuredLink: 'See all shirts',
-  storyQuote: 'We are based in Sydney, so the harbour comes first.',
+  storyQuote: 'Australia is home, and nothing comes before it.',
   storyBody:
-    '2A Marketing keeps a short range. Most of it is Australia: two photo prints of Sydney Harbour and one of Tasmania. The rest is two racing cars, a plain black tee and one for Christmas.',
-  storyLink: 'Read about us',
+    '2A Marketing is a Sydney business with one great love: this country. Most of the range is Australia itself, with two photo prints of Sydney Harbour and one of Tasmania. The rest is two classic racing cars, a plain black tee and one for Christmas.',
+  storyLink: 'Read our story',
 };
 
 export const ABOUT = {
-  title: 'Sydney first, then a few detours',
-  intro: '2A Marketing is a Sydney business that sells t-shirts on Amazon. This site shows the whole range in one place.',
+  title: 'Proudly Australian, through and through',
+  intro:
+    '2A Marketing is a Sydney business, and we love Australia more than anything. This site brings the whole range together in one place.',
   paragraphs: [
-    'The Australia prints come first. One is a 1938 photo of traffic crossing the Sydney Harbour Bridge, under a big SYDNEY heading. Another shows the Opera House and the bridge at sunset, seen across the water from the rocks. The third leaves the mainland for a misty gorge in Tasmania.',
-    'Then come the detours. Two shirts carry black and silver prints of classic open-top racing cars: No. 81 on stone and No. 07 on cream. There is a plain black crew for days when you would rather skip the print, and a black Christmas tee with Santa walking toward a Welcome New Year sign.',
-    "Each shirt has its own page here with photos, colours and sizes. The Buy on Amazon button takes you to the shirt's Amazon listing, which has the current price, sizes and delivery times.",
+    'Australia comes first, always. One shirt carries a 1938 photo of traffic crossing the Sydney Harbour Bridge under a big SYDNEY heading. Another shows the Opera House and the bridge at sunset, seen across the water. The third crosses Bass Strait to a misty gorge in Tasmania, as wild and beautiful as this country gets.',
+    'Then come a few favourites of ours. Two shirts carry black and silver prints of classic open-top racing cars: No. 81 on stone and No. 07 on cream. There is a plain black crew for every day, and a black Christmas tee with Santa walking toward a Welcome New Year sign, ready for a summer Christmas.',
+    "Each shirt has its own page here with photos, colours and sizes. Our shirts are sold on Amazon, and each page links to its Amazon listing once it's live.",
   ],
-  signoff: 'Thanks for having a look around.',
+  signoff: 'Thanks for stopping by. Wear it proud.',
 };
 
 export interface SizeRow {
@@ -73,11 +74,10 @@ export const SIZE_GUIDE = {
 
 export const SHOP = {
   intro:
-    'Photo prints of Sydney and Tasmania, vintage racing cars, a plain black crew and a Christmas tee. Pick a category to narrow it down.',
+    'Photo prints of Sydney and Tasmania, vintage racing cars, a plain black crew and a Christmas tee, from a Sydney business that loves this country. Pick a category to narrow it down.',
 };
 
 export const FOOTER = {
-  note: 'A Sydney business. Our shirts are sold on Amazon.',
-  acknowledgement:
-    'We acknowledge the Traditional Custodians of the lands and waters around Sydney, and pay our respects to Elders past and present.',
+  note: 'Proudly Australian, from Sydney. Our shirts are sold on Amazon.',
+  acknowledgement: 'We acknowledge the Traditional Custodians of the land, and pay our respects to Elders past and present.',
 };
