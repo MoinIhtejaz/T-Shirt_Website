@@ -1,7 +1,7 @@
 // Every piece of marketing copy on the public site lives here so the owner can
 // rename the brand or rewrite the story without touching components.
 // The copy only states what the catalogue shows: a Sydney business, the shirts
-// in the range, and that they are sold on Amazon. Add real details here when the
+// in the range, and where they are sold (Amazon, eBay, Depop, Poshmark and Sydney stalls). Add real details here when the
 // owner supplies them.
 
 import type { Size } from '../../../contracts/types';
@@ -41,7 +41,7 @@ export const ABOUT = {
   paragraphs: [
     'Australia comes first, always. One shirt carries a 1938 photo of traffic crossing the Sydney Harbour Bridge under a big SYDNEY heading. Another shows the Opera House and the bridge at sunset, seen across the water. The third crosses Bass Strait to a misty gorge in Tasmania, as wild and beautiful as this country gets.',
     'Then come a few favourites of ours. Two shirts carry black and silver prints of classic open-top racing cars: No. 81 on stone and No. 07 on cream. There is a plain black crew for every day, and a black Christmas tee with Santa walking toward a Welcome New Year sign, ready for a summer Christmas.',
-    "Each shirt has its own page here with photos, colours and sizes. Our shirts are sold on Amazon, and each page links to its Amazon listing once it's live.",
+    "Each shirt has its own page here with photos, colours and sizes. Our shirts are sold on Amazon, eBay, Depop and Poshmark, and at stalls across Sydney.",
   ],
   signoff: 'Thanks for stopping by. Wear it proud.',
 };
@@ -69,7 +69,7 @@ export const SIZE_GUIDE = {
     { term: 'Length', text: 'Measure from the highest point of the shoulder, next to the collar, down to the hem.' },
     { term: 'In between?', text: 'Go up a size for a relaxed fit, or stay down for a closer one.' },
   ],
-  amazonNote: "The Amazon listing may show its own size chart. If the two disagree, go with Amazon's.",
+  amazonNote: "A marketplace listing may show its own size chart. If the two disagree, go with the listing's.",
 };
 
 export const SHOP = {
@@ -78,6 +78,6 @@ export const SHOP = {
 };
 
 export const FOOTER = {
-  note: 'Proudly Australian, from Sydney. Our shirts are sold on Amazon.',
+  note: 'Proudly Australian, from Sydney. Our shirts are sold on Amazon, eBay, Depop and Poshmark, and at stalls across Sydney.',
   acknowledgement: 'We acknowledge the Traditional Custodians of the land, and pay our respects to Elders past and present.',
 };
