@@ -23,12 +23,12 @@ export const HOME = {
   eyebrow: 'Proudly Australian, from Sydney',
   headline: ['Love this land.', 'Wear it proud.'],
   lede:
-    'We love Australia more than anything, and these shirts show it. The Harbour Bridge in 1938, the Opera House at sunset, a wild Tasmanian gorge. There are vintage racing cars, a plain black crew and a Christmas tee too. Find the one that feels like home.',
+    'Photo prints of the Harbour Bridge in 1938, the Opera House at sunset and a wild Tasmanian gorge. There are vintage racing cars, a plain black crew and a Christmas tee too. Find the one that feels like home.',
   primaryCta: 'Shop all shirts',
   secondaryCta: 'Our story',
   featuredTitle: 'Start with these',
   featuredLink: 'See all shirts',
-  storyQuote: 'For Australia and the Australian people. Australia always comes first.',
+  storyQuote: 'For Australia and the Australian people.',
   storyBody:
     '2A Marketing is a Sydney business with one great love: this country. Most of the range is Australia itself, with two photo prints of Sydney Harbour and one of Tasmania. The rest is two classic racing cars, a plain black tee and one for Christmas.',
   storyLink: 'Read our story',
