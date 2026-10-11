@@ -28,7 +28,7 @@ export const HOME = {
   secondaryCta: 'Our story',
   featuredTitle: 'Start with these',
   featuredLink: 'See all shirts',
-  storyQuote: 'Australia is home, and nothing comes before it.',
+  storyQuote: 'For Australia and the Australian people. Australia always comes first.',
   storyBody:
     '2A Marketing is a Sydney business with one great love: this country. Most of the range is Australia itself, with two photo prints of Sydney Harbour and one of Tasmania. The rest is two classic racing cars, a plain black tee and one for Christmas.',
   storyLink: 'Read our story',
