@@ -43,7 +43,7 @@ export const ABOUT = {
     'The rest are a few favourites of ours. Two shirts carry black and silver prints of classic open-top racing cars: No. 81 on stone and No. 07 on cream. There is a plain black crew for every day, and a black Christmas tee with Santa walking toward a Welcome New Year sign, ready for a summer Christmas.',
     "Each shirt has its own page here with photos, colours and sizes. Our shirts are sold on Amazon, eBay, Depop and Poshmark, and at stalls across Sydney.",
   ],
-  signoff: 'Thanks for having a look around.',
+  signoff: 'Thanks for stopping by. Wear it proud.',
 };
 
 export interface SizeRow {
