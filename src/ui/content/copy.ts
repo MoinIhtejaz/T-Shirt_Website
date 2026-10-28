@@ -79,5 +79,5 @@ export const SHOP = {
 
 export const FOOTER = {
   note: 'Proudly Australian, from Sydney. Our shirts are sold on Amazon, eBay and Depop, and at stalls across Sydney.',
-  acknowledgement: 'We acknowledge the Traditional Custodians of the land, and pay our respects to Elders past and present.',
+  acknowledgement: 'We acknowledge the Traditional Custodians of the land, and pay our respects to Elders past, present and emerging.',
 };
